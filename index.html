@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Kowri Admin • Welcome</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: #0a0c0f;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      color: #eef2ff;
+      line-height: 1.4;
+    }
+
+    /* main card container — fits any screen perfectly */
+    .admin-card {
+      max-width: 460px;
+      width: 100%;
+      margin: 0 auto;
+      background: rgba(18, 22, 28, 0.92);
+      backdrop-filter: blur(2px);
+      border-radius: 2rem;
+      border: 1px solid rgba(245, 158, 11, 0.25);
+      box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(245, 158, 11, 0.05);
+      padding: 2rem 1.8rem;
+      transition: all 0.2s ease;
+    }
+
+    /* subtle ambient glow */
+    .admin-card {
+      background: linear-gradient(135deg, rgba(20, 24, 30, 0.96) 0%, rgba(12, 15, 20, 0.98) 100%);
+    }
+
+    /* badge / icon area */
+    .icon-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(245, 158, 11, 0.12);
+      width: 56px;
+      height: 56px;
+      border-radius: 32px;
+      margin-bottom: 1.5rem;
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+
+    .icon-badge i {
+      font-size: 28px;
+      color: #f59e0b;
+      filter: drop-shadow(0 2px 4px rgba(245,158,11,0.2));
+    }
+
+    /* status row */
+    .status-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(245, 158, 11, 0.08);
+      border-radius: 40px;
+      padding: 5px 14px;
+      font-size: 0.7rem;
+      font-weight: 500;
+      letter-spacing: 0.3px;
+      text-transform: uppercase;
+      color: #f59e0b;
+      border: 0.5px solid rgba(245, 158, 11, 0.3);
+      margin-bottom: 1.2rem;
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      background: #f59e0b;
+      border-radius: 50%;
+      box-shadow: 0 0 4px #f59e0b;
+    }
+
+    /* typography */
+    h1 {
+      font-size: clamp(1.8rem, 7vw, 2.5rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+      margin-bottom: 0.4rem;
+    }
+
+    .wordmark {
+      font-size: 0.7rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: #9ca3af;
+      margin-bottom: 0.5rem;
+    }
+
+    .description {
+      font-size: 0.9rem;
+      color: #b9c1cc;
+      margin: 1rem 0 1.6rem 0;
+      line-height: 1.5;
+      font-weight: 400;
+    }
+
+    /* info grid — simplified, only time and date */
+    .info-grid {
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 1.2rem;
+      padding: 0.9rem 1rem;
+      margin: 1.2rem 0 1.6rem;
+      border: 0.5px solid rgba(255,255,255,0.05);
+    }
+
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      padding: 0.6rem 0;
+      border-bottom: 1px solid rgba(245, 158, 11, 0.1);
+    }
+
+    .info-row:last-child {
+      border-bottom: none;
+    }
+
+    .info-label {
+      font-size: 0.75rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      color: #9ca3af;
+    }
+
+    .info-value {
+      font-family: 'Inter', monospace;
+      font-weight: 500;
+      font-size: 0.9rem;
+      color: #f59e0b;
+      background: rgba(245,158,11,0.05);
+      padding: 0.2rem 0.6rem;
+      border-radius: 24px;
+    }
+
+    /* main button */
+    .btn-admin {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      width: 100%;
+      background: #f59e0b;
+      color: #0a0c0f;
+      border: none;
+      font-weight: 600;
+      font-size: 1rem;
+      padding: 0.9rem 1.2rem;
+      border-radius: 60px;
+      cursor: pointer;
+      transition: 0.2s ease;
+      font-family: inherit;
+      margin-bottom: 1rem;
+      box-shadow: 0 6px 14px rgba(245, 158, 11, 0.2);
+      text-decoration: none;
+    }
+
+    .btn-admin i {
+      font-size: 1rem;
+      transition: transform 0.2s;
+    }
+
+    .btn-admin:hover {
+      background: #e08e00;
+      transform: scale(0.98);
+      box-shadow: 0 4px 10px rgba(245, 158, 11, 0.3);
+    }
+
+    .btn-admin:active {
+      transform: scale(0.97);
+    }
+
+    .footnote {
+      text-align: center;
+      font-size: 0.7rem;
+      color: #6b7280;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 0.5rem;
+    }
+
+    .footnote i {
+      font-size: 0.65rem;
+      opacity: 0.7;
+    }
+
+    /* live badge style */
+    .live-badge {
+      font-family: monospace;
+      font-size: 0.75rem;
+      background: rgba(0,0,0,0.4);
+      padding: 0.2rem 0.6rem;
+      border-radius: 20px;
+      color: #f59e0b;
+    }
+
+    /* responsive tweaks: perfect on mobile */
+    @media (max-width: 480px) {
+      body {
+        padding: 1rem;
+        align-items: center;
+      }
+      .admin-card {
+        padding: 1.6rem 1.4rem;
+      }
+      .info-row {
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      .info-value {
+        font-size: 0.8rem;
+      }
+      .btn-admin {
+        padding: 0.75rem 1rem;
+      }
+    }
+
+    /* very small devices (<=360) */
+    @media (max-width: 360px) {
+      .admin-card {
+        padding: 1.4rem 1.2rem;
+      }
+      .info-grid {
+        padding: 0.7rem 0.8rem;
+      }
+    }
+
+    /* remove default link styles */
+    a {
+      text-decoration: none;
+    }
+
+    /* simple fade-in */
+    .admin-card {
+      animation: fadeSlideUp 0.5s ease-out;
+    }
+
+    @keyframes fadeSlideUp {
+      from {
+        opacity: 0;
+        transform: translateY(12px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* no overflow, body exactly fits */
+    html, body {
+      overflow-x: hidden;
+    }
+  </style>
+</head>
+<body>
+
+<div class="admin-card">
+  
+  <!-- icon / shield simple -->
+  <div class="icon-badge">
+    <i class="fa-solid fa-shield-halved"></i>
+  </div>
+
+  <!-- status indicator -->
+  <div class="status-chip">
+    <div class="status-dot"></div>
+    <span>secure session ready</span>
+  </div>
+
+  <!-- headline -->
+  <div class="wordmark">KOWRI PLATFORM</div>
+  <h1>Welcome back,<br>Administrator</h1>
+  
+  <p class="description">
+    Restricted admin area. All actions are encrypted and logged.<br>
+    Use your credentials to access the control panel.
+  </p>
+
+  <!-- simple info block: only time + date (clean & minimal) -->
+  <div class="info-grid">
+    <div class="info-row">
+      <span class="info-label"><i class="fa-regular fa-clock" style="margin-right: 4px;"></i> Local time</span>
+      <span class="info-value" id="liveTime">--:-- --</span>
+    </div>
+    <div class="info-row">
+      <span class="info-label"><i class="fa-regular fa-calendar"></i> Session date</span>
+      <span class="info-value" id="liveDate">—</span>
+    </div>
+  </div>
+
+  <!-- CTA button -->
+  <a href="admin-login.html" class="btn-admin" id="enterPortalBtn">
+    <i class="fa-solid fa-arrow-right-to-bracket"></i>
+    Enter admin console
+  </a>
+
+  <div class="footnote">
+    <i class="fa-solid fa-lock-keyhole"></i>
+    <span>authorized personnel only</span>
+    <i class="fa-regular fa-circle-check" style="color:#f59e0b;"></i>
+  </div>
+</div>
+
+<script>
+  (function() {
+    // ======================
+    // live time & date (updates every second)
+    // ======================
+    const timeEl = document.getElementById('liveTime');
+    const dateEl = document.getElementById('liveDate');
+
+    function updateDateTime() {
+      const now = new Date();
+      // time format: HH:MM AM/PM (clean & readable)
+      let hours = now.getHours();
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      hours = hours % 12;
+      hours = hours ? hours : 12; // midnight = 12
+      const formattedTime = `${hours}:${minutes} ${ampm}`;
+      if (timeEl) timeEl.textContent = formattedTime;
+      
+      // date: e.g., "Mar 21, 2025"
+      const options = { year: 'numeric', month: 'short', day: 'numeric' };
+      const formattedDate = now.toLocaleDateString('en-US', options);
+      if (dateEl) dateEl.textContent = formattedDate;
+    }
+    updateDateTime();
+    setInterval(updateDateTime, 1000);
+    
+    // fallback in case date element somehow empty
+    if (dateEl && dateEl.textContent === '—') {
+      const fallbackDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+      dateEl.textContent = fallbackDate;
+    }
+    
+    // ======================
+    // button interaction (just console log, keeps redirect)
+    // ======================
+    const enterBtn = document.getElementById('enterPortalBtn');
+    if (enterBtn) {
+      enterBtn.addEventListener('click', function(e) {
+        console.log('🔐 Kowri Admin: redirecting to login portal');
+      });
+    }
+    
+    // ensure body scrolling is normal (mobile friendly)
+    document.body.style.overflow = 'auto';
+    
+    console.log('✓ Kowri Admin welcome screen loaded | active users & version removed');
+  })();
+</script>
+</body>
+</html>

@@ -722,8 +722,9 @@ function closeFlexModal() {
 async function confirmFlexApprove() {
   const reward = parseFloat(document.getElementById('flex-reward-input').value);
   if (!reward || reward <= 0) { toast('Please enter a valid reward amount.','error'); return; }
+  const depositId = pendingFlexId; // ✅ save before closing
   closeFlexModal();
-  await updateDepositStatus(pendingFlexId, 'APPROVED', reward);
+  await updateDepositStatus(depositId, 'APPROVED', reward);
 }
 
 // ── Credit User Modal ──────────────────────────────────────
@@ -740,21 +741,23 @@ function closeCreditModal() {
 async function confirmCreditUser() {
   const amount = parseFloat(document.getElementById('credit-amount-input').value);
   if (!amount || amount <= 0) { toast('Please enter a valid amount.','error'); return; }
+
+  const userId = pendingCreditUserId; // ✅ save BEFORE closeCreditModal nulls it
   closeCreditModal();
 
   try {
     const res = await fetch(`${API}/api/admin/deposits/credit`, {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${getToken()}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId: pendingCreditUserId, amount })
+      body: JSON.stringify({ userId: userId, amount })
     });
     if (!res.ok) throw new Error('Credit failed');
 
     // Update balance in allUsers array + re-render
-    const idx = allUsers.findIndex(u => u.id === pendingCreditUserId);
+    const idx = allUsers.findIndex(u => u.id === userId);
     if (idx > -1) {
       allUsers[idx].balance = (parseFloat(allUsers[idx].balance||0) + amount);
-      const el = document.getElementById('balance-' + pendingCreditUserId);
+      const el = document.getElementById('balance-' + userId);
       if (el) el.textContent = fmt(allUsers[idx].balance);
     }
     toast(`GH₵${amount.toFixed(2)} credited successfully`, 'info');
@@ -863,8 +866,8 @@ async function init() {
   if (!stored || !token) { location.href = 'admin-login.html'; return; }
 
   const admin    = JSON.parse(stored);
-  const initials = (admin.fullName||'A').split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
-  document.getElementById('admin-avatar').textContent = initials;
+  const inits    = (admin.fullName||'A').split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
+  document.getElementById('admin-avatar').textContent = inits;
   document.getElementById('admin-name').textContent   = admin.fullName || admin.email;
 
   const headers = { 'Authorization': `Bearer ${token}` };

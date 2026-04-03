@@ -99,6 +99,7 @@ tr.clickable-row:hover td:first-child{border-left:2px solid var(--amber);}
 .user-balance .ub-val{font-family:'Sora',sans-serif;font-size:16px;font-weight:800;color:#22c55e;}
 .btn-credit-user{width:100%;background:rgba(168,85,247,0.1);border:1px solid rgba(168,85,247,0.25);color:#a855f7;border-radius:8px;padding:10px;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;font-family:'DM Sans',sans-serif;display:flex;align-items:center;justify-content:center;gap:7px;}
 .btn-credit-user:hover{background:rgba(168,85,247,0.2);}
+.btn-credit-user:disabled{opacity:0.5;cursor:not-allowed;}
 
 /* ── DRAWER ──────────────────────────────────────────── */
 .drawer-overlay{position:fixed;inset:0;background:rgba(0,0,0,0);z-index:200;pointer-events:none;transition:background .3s;}
@@ -151,6 +152,7 @@ tr.clickable-row:hover td:first-child{border-left:2px solid var(--amber);}
 .btn-modal-confirm:hover{background:var(--amber-dark);}
 .btn-modal-confirm.purple{background:#a855f7;color:#fff;}
 .btn-modal-confirm.purple:hover{background:#9333ea;}
+.btn-modal-confirm:disabled{opacity:0.6;cursor:not-allowed;}
 
 /* ── FULLSCREEN IMAGE ────────────────────────────────── */
 .img-fullscreen{position:fixed;inset:0;background:#000;z-index:999;display:none;flex-direction:column;align-items:center;justify-content:center;}
@@ -338,7 +340,7 @@ tr.clickable-row:hover td:first-child{border-left:2px solid var(--amber);}
     </div>
     <div class="modal-actions">
       <button class="btn-modal-cancel" onclick="closeFlexModal()">Cancel</button>
-      <button class="btn-modal-confirm" onclick="confirmFlexApprove()"><i class="fa-solid fa-check"></i> Approve & Credit</button>
+      <button class="btn-modal-confirm" id="flex-confirm-btn" onclick="confirmFlexApprove()"><i class="fa-solid fa-check"></i> Approve & Credit</button>
     </div>
   </div>
 </div>
@@ -354,7 +356,7 @@ tr.clickable-row:hover td:first-child{border-left:2px solid var(--amber);}
     </div>
     <div class="modal-actions">
       <button class="btn-modal-cancel" onclick="closeCreditModal()">Cancel</button>
-      <button class="btn-modal-confirm purple" onclick="confirmCreditUser()"><i class="fa-solid fa-bolt"></i> Credit Now</button>
+      <button class="btn-modal-confirm purple" id="credit-confirm-btn" onclick="confirmCreditUser()"><i class="fa-solid fa-bolt"></i> Credit Now</button>
     </div>
   </div>
 </div>
@@ -548,7 +550,7 @@ function renderUsers() {
         <span class="ub-label">Current Balance</span>
         <span class="ub-val" id="balance-${u.id}">${fmt(u.balance||0)}</span>
       </div>
-      <button class="btn-credit-user" onclick="openCreditModal('${u.id}','${(u.fullName||'').replace(/'/g,"\\'")}')">
+      <button class="btn-credit-user" id="credit-btn-${u.id}" onclick="openCreditModal('${u.id}','${(u.fullName||'').replace(/'/g,"\\'")}')">
         <i class="fa-solid fa-bolt"></i> Credit Balance
       </button>
     </div>`).join('');
@@ -722,7 +724,7 @@ function closeFlexModal() {
 async function confirmFlexApprove() {
   const reward = parseFloat(document.getElementById('flex-reward-input').value);
   if (!reward || reward <= 0) { toast('Please enter a valid reward amount.','error'); return; }
-  const depositId = pendingFlexId; // ✅ save before closing
+  const depositId = pendingFlexId;
   closeFlexModal();
   await updateDepositStatus(depositId, 'APPROVED', reward);
 }
@@ -730,7 +732,8 @@ async function confirmFlexApprove() {
 // ── Credit User Modal ──────────────────────────────────────
 function openCreditModal(userId, userName) {
   pendingCreditUserId = userId;
-  document.getElementById('credit-modal-desc').textContent = `Enter the amount to credit directly to ${userName}'s balance. This is instant — no approval needed.`;
+  document.getElementById('credit-modal-desc').textContent =
+    `Enter the amount to credit directly to ${userName}'s balance. This is instant — no approval needed.`;
   document.getElementById('credit-amount-input').value = '';
   document.getElementById('credit-modal').classList.add('open');
 }
@@ -738,31 +741,59 @@ function closeCreditModal() {
   pendingCreditUserId = null;
   document.getElementById('credit-modal').classList.remove('open');
 }
+
+// ── ✅ FIXED: confirmCreditUser uses server response balance ──
 async function confirmCreditUser() {
   const amount = parseFloat(document.getElementById('credit-amount-input').value);
-  if (!amount || amount <= 0) { toast('Please enter a valid amount.','error'); return; }
+  if (!amount || amount <= 0) { toast('Please enter a valid amount.', 'error'); return; }
 
-  const userId = pendingCreditUserId; // ✅ save BEFORE closeCreditModal nulls it
+  // Save userId BEFORE closing modal (which nulls pendingCreditUserId)
+  const userId = pendingCreditUserId;
   closeCreditModal();
+
+  // Disable the credit button to prevent double-click
+  const btn = document.getElementById('credit-btn-' + userId);
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Crediting...'; }
 
   try {
     const res = await fetch(`${API}/api/admin/deposits/credit`, {
       method: 'POST',
-      headers: { 'Authorization': `Bearer ${getToken()}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId: userId, amount })
+      headers: {
+        'Authorization': `Bearer ${getToken()}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ userId: userId, amount: amount })
     });
-    if (!res.ok) throw new Error('Credit failed');
 
-    // Update balance in allUsers array + re-render
+    if (!res.ok) {
+      // Capture actual server error message for debugging
+      const errText = await res.text();
+      throw new Error(errText || 'Credit failed');
+    }
+
+    // ✅ Use the real balance returned by the server — not a local calculation
+    const credited = await res.json();
+    const newBalance = credited.userBalance;
+
+    // Update allUsers array with authoritative server balance
     const idx = allUsers.findIndex(u => u.id === userId);
     if (idx > -1) {
-      allUsers[idx].balance = (parseFloat(allUsers[idx].balance||0) + amount);
-      const el = document.getElementById('balance-' + userId);
-      if (el) el.textContent = fmt(allUsers[idx].balance);
+      allUsers[idx].balance = newBalance;
     }
+
+    // Update the balance display in the UI
+    const balEl = document.getElementById('balance-' + userId);
+    if (balEl) balEl.textContent = fmt(newBalance);
+
     toast(`GH₵${amount.toFixed(2)} credited successfully`, 'info');
   } catch(e) {
     toast('Credit failed: ' + e.message, 'error');
+  } finally {
+    // Re-enable the button regardless of success or failure
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-bolt"></i> Credit Balance';
+    }
   }
 }
 
@@ -789,10 +820,16 @@ async function updateDepositStatus(id, status, rewardAmount) {
     });
     if (!res.ok) throw new Error('Update failed');
 
+    const updated = await res.json();
+
     const idx = allDeposits.findIndex(d => d.id === id);
     if (idx > -1) {
       allDeposits[idx].status = status;
       if (rewardAmount) allDeposits[idx].rewardAmount = rewardAmount;
+      // ✅ Also update cached userBalance from server response
+      if (updated.userBalance !== undefined) {
+        allDeposits[idx].userBalance = updated.userBalance;
+      }
     }
 
     renderFixed(); renderFlexible(); renderOverview();
